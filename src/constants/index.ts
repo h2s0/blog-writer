@@ -4,7 +4,7 @@ export const MAX_STYLE_SAMPLES = 3
 export const IMAGE_CATEGORIES = ['exterior', 'interior', 'menu', 'food'] as const
 export type ImageCategory = (typeof IMAGE_CATEGORIES)[number]
 
-export const POST_STATUS = ['draft', 'preview_ready', 'published'] as const
+export const POST_STATUS = ['draft', 'generating', 'done'] as const
 export type PostStatus = (typeof POST_STATUS)[number]
 
 export const SUBSCRIPTION_PLANS = ['free', 'pro'] as const
