@@ -1,13 +1,6 @@
 import { redirect } from 'next/navigation'
-import { createServerClient } from '@/lib/supabase/server'
 
-export default async function RootPage() {
-  const supabase = await createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (user) {
-    redirect('/dashboard')
-  } else {
-    redirect('/login')
-  }
+// TODO: 출시 전 인증 체크 복구
+export default function RootPage() {
+  redirect('/dashboard')
 }
