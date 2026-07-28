@@ -33,41 +33,39 @@ export function PostForm() {
         <h2 className="text-sm font-medium">기본 정보</h2>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="title">글 제목 (선택)</Label>
-          <Input id="title" name="title" placeholder="예: 을지로 분위기 맛집 카페" />
+          <Label htmlFor="keyword">키워드 (선택)</Label>
+          <Input
+            id="keyword"
+            name="keyword"
+            placeholder="예: 을지로 감성카페 — 입력하면 글 제목에 반영돼요"
+          />
+          <p className="text-muted-foreground text-xs">
+            글 제목은 AI가 자동으로 생성해요. 키워드를 넣으면 제목에 포함하고, 비워두면 알아서 지어드려요.
+          </p>
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="location">장소명 / 위치</Label>
+          <Label htmlFor="location">방문한 업체 이름</Label>
           <Input
             id="location"
             name="location"
-            placeholder="예: 카페 온도, 서울 을지로 3가"
+            placeholder="예: 카페 온도"
             required
-          />
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="hours">영업시간</Label>
-          <Input
-            id="hours"
-            name="hours"
-            placeholder="예: 평일 11:00~21:00, 주말 10:00~22:00"
           />
         </div>
       </div>
 
       <Separator />
 
-      {/* 메뉴 정보 */}
+      {/* 이용 내역 */}
       <div className="flex flex-col gap-4">
-        <h2 className="text-sm font-medium">메뉴 및 가격</h2>
+        <h2 className="text-sm font-medium">이용한 서비스</h2>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="menu_items">메뉴 목록</Label>
+          <Label htmlFor="menu_items">이용 내역</Label>
           <Textarea
             id="menu_items"
             name="menu_items"
-            placeholder={`한 줄에 하나씩 입력해주세요.\n예:\n아메리카노 4,500원\n카페라떼 5,000원\n시그니처 음료 6,500원`}
+            placeholder={`이용하신 메뉴나 서비스, 가격을 한 줄에 하나씩 적어주세요.\n예:\n아메리카노 4,500원\n젤네일 케어 35,000원`}
             rows={5}
           />
         </div>
@@ -86,6 +84,9 @@ export function PostForm() {
             placeholder={`AI가 글을 쓸 때 참고할 내용을 자유롭게 적어주세요.\n예: 주차 가능, 반려동물 동반 가능, 콘센트 많음, 조용한 분위기, 직원이 친절했음`}
             rows={4}
           />
+          <p className="text-muted-foreground text-xs">
+            자세히 적을수록 더 자연스러운 글이 나와요.
+          </p>
         </div>
       </div>
 

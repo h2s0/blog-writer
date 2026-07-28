@@ -6,8 +6,8 @@ interface GenerateRequest {
   postId: string
   userId: string
   samples: string[]
+  keyword: string
   location: string
-  hours: string
   menuItems: string
   extraInfo: string
   imageUrls: string[]
@@ -15,13 +15,13 @@ interface GenerateRequest {
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const body: GenerateRequest = await req.json()
-  const { postId, userId, samples, location, hours, menuItems, extraInfo, imageUrls } = body
+  const { postId, userId, samples, keyword, location, menuItems, extraInfo, imageUrls } = body
 
   const supabase = await createServerClient()
 
   try {
     const systemPrompt = buildSystemPrompt(samples)
-    const userMessage = await buildUserMessage({ location, hours, menuItems, extraInfo, imageUrls })
+    const userMessage = await buildUserMessage({ keyword, location, menuItems, extraInfo, imageUrls })
 
     const response = await anthropic.messages.create({
       model: CLAUDE_MODEL,
@@ -30,12 +30,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       messages: [{ role: 'user', content: userMessage }],
     })
 
-    const generatedText =
+    const rawText =
       response.content[0].type === 'text' ? response.content[0].text : ''
+    const { title, body: generatedText } = parseGeneratedResponse(rawText)
 
     await supabase
       .from('posts')
-      .update({ generated_text: generatedText, status: 'done' })
+      .update({ title, generated_text: generatedText, status: 'done' })
       .eq('id', postId)
       .eq('user_id', userId)
 
@@ -67,14 +68,21 @@ ${sampleText}
 1. 위 샘플의 말투와 문체를 그대로 유지하세요. AI가 쓴 것처럼 느껴지면 안 됩니다.
 2. 사진 위치는 [사진 1], [사진 2] 형태로 본문 중간중간에 자연스럽게 배치하세요.
 3. 마크다운 서식(##, **, 백틱 등)을 절대 사용하지 마세요. 네이버 블로그에 바로 복붙할 수 있는 순수 텍스트만 출력하세요.
-4. 글 제목은 출력하지 마세요. 본문만 작성하세요.
-5. 제공된 정보(위치, 영업시간, 메뉴, 가격 등)를 자연스럽게 녹여 쓰세요.
-6. 사진 설명을 보고 실제로 그 장소에 방문한 것처럼 생생하게 묘사하세요.`
+4. 응답의 첫 줄은 반드시 "제목: {글 제목}" 형식으로 시작하세요. 제목에는 마크다운이나 특수기호를 쓰지 마세요. 그다음 빈 줄을 하나 넣고 이어서 본문을 작성하세요.
+5. SEO 키워드가 제공된 경우, 제목에 그 키워드를 자연스럽게 포함하세요. 키워드가 없다면 방문한 업체 이름이나 글의 특징을 살려 자유롭게 제목을 지으세요.
+6. 제공된 정보(장소, 이용한 서비스 등)를 자연스럽게 녹여 쓰세요.
+7. 사진 설명을 보고 실제로 그 장소에 방문한 것처럼 생생하게 묘사하세요.`
+}
+
+function parseGeneratedResponse(rawText: string): { title: string | null; body: string } {
+  const match = rawText.match(/^제목:\s*(.+)\r?\n\r?\n?([\s\S]*)$/)
+  if (!match) return { title: null, body: rawText.trim() }
+  return { title: match[1].trim(), body: match[2].trim() }
 }
 
 async function buildUserMessage({
+  keyword,
   location,
-  hours,
   menuItems,
   extraInfo,
   imageUrls,
@@ -82,9 +90,9 @@ async function buildUserMessage({
   Anthropic.MessageParam['content']
 > {
   const infoText = [
-    location && `장소: ${location}`,
-    hours && `영업시간: ${hours}`,
-    menuItems && `메뉴:\n${menuItems}`,
+    keyword && `SEO 키워드: ${keyword}`,
+    location && `방문한 업체: ${location}`,
+    menuItems && `이용한 서비스:\n${menuItems}`,
     extraInfo && `추가 정보: ${extraInfo}`,
     `사진 수: ${imageUrls.length}장`,
   ]

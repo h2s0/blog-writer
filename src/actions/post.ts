@@ -40,21 +40,20 @@ export async function createPost(
     return { error: '말투 샘플을 먼저 등록해주세요.' }
   }
 
-  const title = formData.get('title') as string
+  const keyword = formData.get('keyword') as string
   const location = formData.get('location') as string
-  const hours = formData.get('hours') as string
   const menuItemsRaw = formData.get('menu_items') as string
   const extraInfo = formData.get('extra_info') as string
   const imageUrls = formData.getAll('image_urls') as string[]
 
-  // 글 레코드 생성 (generating 상태)
+  // 글 레코드 생성 (generating 상태, 제목은 AI가 생성)
   const { data: post, error: postError } = await supabase
     .from('posts')
     .insert({
       user_id: user.id,
-      title: title || null,
+      title: null,
       location: location || null,
-      hours: hours || null,
+      hours: null,
       menu_items: menuItemsRaw
         ? { raw: menuItemsRaw }
         : null,
@@ -86,8 +85,8 @@ export async function createPost(
       postId: post.id,
       userId: user.id,
       samples: samples.map((s) => s.content),
+      keyword,
       location,
-      hours,
       menuItems: menuItemsRaw,
       extraInfo,
       imageUrls,
