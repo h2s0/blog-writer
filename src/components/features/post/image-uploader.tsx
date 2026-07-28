@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { Spinner } from '@/components/ui/spinner'
+import { IMAGE_UPLOAD_MAX_DIMENSION, IMAGE_UPLOAD_QUALITY } from '@/constants'
 
 interface ImageUploaderProps {
   onUploadComplete: (urls: string[]) => void
@@ -11,6 +12,32 @@ interface ImageUploaderProps {
 interface UploadedImage {
   url: string
   name: string
+}
+
+async function resizeImage(file: File): Promise<File> {
+  const bitmap = await createImageBitmap(file)
+  const scale = Math.min(1, IMAGE_UPLOAD_MAX_DIMENSION / Math.max(bitmap.width, bitmap.height))
+  const width = Math.round(bitmap.width * scale)
+  const height = Math.round(bitmap.height * scale)
+
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')
+  if (!ctx) {
+    bitmap.close()
+    return file
+  }
+  ctx.drawImage(bitmap, 0, 0, width, height)
+  bitmap.close()
+
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, 'image/jpeg', IMAGE_UPLOAD_QUALITY)
+  )
+  if (!blob) return file
+
+  const resizedName = file.name.replace(/\.[^.]+$/, '') + '.jpg'
+  return new File([blob], resizedName, { type: 'image/jpeg' })
 }
 
 export function ImageUploader({ onUploadComplete }: ImageUploaderProps) {
@@ -36,10 +63,12 @@ export function ImageUploader({ onUploadComplete }: ImageUploaderProps) {
       for (const file of Array.from(files)) {
         if (!file.type.startsWith('image/')) continue
 
-        const path = `${user.id}/${Date.now()}_${file.name}`
+        const resized = await resizeImage(file).catch(() => file)
+
+        const path = `${user.id}/${Date.now()}_${resized.name}`
         const { error: uploadError } = await supabase.storage
           .from('post-images')
-          .upload(path, file)
+          .upload(path, resized)
 
         if (uploadError) {
           setError('업로드 실패: ' + file.name)
