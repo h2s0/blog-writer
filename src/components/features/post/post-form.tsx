@@ -96,7 +96,7 @@ export function PostForm() {
       <div className="flex flex-col gap-4">
         <h2 className="text-sm font-medium">사진</h2>
         <p className="text-muted-foreground text-sm">
-          사진을 업로드하면 AI가 내용을 파악해서 글에 자연스럽게 반영해요.
+          외관, 메뉴판, 음식, 내부 사진을 섞어서 10장 정도 올리면 AI가 알아서 구분해 글에 배치해요.
         </p>
         <ImageUploader onUploadComplete={setImageUrls} />
       </div>
